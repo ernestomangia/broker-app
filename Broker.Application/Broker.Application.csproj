@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Broker.Application.Core\Broker.Application.Core.csproj" />
+    <ProjectReference Include="..\Broker.Infrastructure.Integration.Services\Broker.Infrastructure.Integration.Services.csproj" />
     <ProjectReference Include="..\Broker.Infrastructure\Broker.Infrastructure.csproj" />
   </ItemGroup>
 

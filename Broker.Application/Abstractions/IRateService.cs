@@ -6,5 +6,5 @@ public interface IRateService
 {
     Task<ICollection<RateModel>> FindAll();
 
-    Task<BestRateModel> FindBest();
+    Task<BestRevenueModel> FindBestRevenue(DateTime startDate, DateTime endDate, decimal moneyUsd);
 }

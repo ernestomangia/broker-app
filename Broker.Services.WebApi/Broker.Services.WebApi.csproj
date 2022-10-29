@@ -14,4 +14,9 @@
     <ProjectReference Include="..\Broker.Application\Broker.Application.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Attributes\" />
+    <Folder Include="Models\" />
+  </ItemGroup>
+
 </Project>

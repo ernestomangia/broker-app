@@ -1,11 +1,25 @@
+using System.Net.Http.Headers;
 using Broker.Infrastructure;
+using Broker.Infrastructure.Integration.Services.Services.ERA;
 using Broker.Services.WebApi.Extensions;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container
-builder.Services.AddServices();
+builder.Services.AddServices(builder.Configuration);
+
+// Add http services
+builder.Services.AddHttpClient(nameof(ExchangeRatesApiServiceBase), httpClient =>
+{
+    var apiUrl = builder.Configuration.GetSection("Integrations:ExchangeRatesApi")["ApiUrl"] ?? string.Empty;
+    var apiKey = builder.Configuration.GetSection("Integrations:ExchangeRatesApi")["ApiKey"] ?? string.Empty;
+
+    httpClient.BaseAddress = new Uri(apiUrl);
+
+    httpClient.DefaultRequestHeaders.Add(ApiKeyName, apiKey);
+    httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue(ApplicationJson));
+});
 
 // Add controllers
 builder.Services.AddControllers();
@@ -17,7 +31,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // Add Cors
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AppCorsPolicy",
+    options.AddPolicy(AppCorsPolicyName,
         policy =>
         {
             policy.AllowAnyOrigin()
@@ -34,7 +48,7 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-app.UseCors("AppCorsPolicy");
+app.UseCors(AppCorsPolicyName);
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -50,3 +64,10 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+public partial class Program
+{
+    private const string ApiKeyName = "apikey";
+    private const string ApplicationJson = "application/json";
+    private const string AppCorsPolicyName = "AppCorsPolicy";
+}

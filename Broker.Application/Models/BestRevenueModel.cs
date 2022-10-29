@@ -1,6 +1,6 @@
 ﻿namespace Broker.Application.Models;
 
-public class BestRateModel
+public class BestRevenueModel
 {
     public DateTime BuyDate { get; set; }
 
@@ -8,7 +8,7 @@ public class BestRateModel
 
     public string Tool { get; set; }
 
-    public double Revenue { get; set; }
+    public decimal Revenue { get; set; }
 
     public ICollection<RateModel> Rates { get; set; }
 }

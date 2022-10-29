@@ -1,7 +1,6 @@
-﻿namespace Broker.Domain.Core
+﻿namespace Broker.Domain.Core;
+
+public abstract class EntityBase
 {
-    public abstract class EntityBase
-    {
-        public Guid Id { get; set; }
-    }
+    public Guid Id { get; set; }
 }

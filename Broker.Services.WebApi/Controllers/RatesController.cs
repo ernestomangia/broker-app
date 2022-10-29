@@ -22,11 +22,11 @@ public class RatesController : ControllerBase
     }
 
     [HttpGet("best")]
-    public async Task<BestRateModel> FindBest(
+    public async Task<BestRevenueModel> FindBestRevenue(
         [FromQuery] DateTime startDate,
         [FromQuery] DateTime endDate,
-        [FromQuery] int moneyUsd)
+        [FromQuery] decimal moneyUsd)
     {
-        return await _rateService.FindBest();
+        return await _rateService.FindBestRevenue(startDate, endDate, moneyUsd);
     }
 }
