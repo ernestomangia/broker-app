@@ -15,12 +15,6 @@ public class RatesController : ControllerBase
         _rateService = rateService;
     }
 
-    [HttpGet]
-    public async Task<ICollection<RateModel>> FindAll()
-    {
-        return await _rateService.FindAll();
-    }
-
     [HttpGet("best")]
     public async Task<BestRevenueModel> FindBestRevenue(
         [FromQuery] DateTime startDate,

@@ -22,4 +22,5 @@ public class AppDbContext : DbContext
     }
 
     public DbSet<Rate> Rates { get; set; }
+    public DbSet<RateValue> RateValues { get; set; }
 }

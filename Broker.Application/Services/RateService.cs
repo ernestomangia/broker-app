@@ -2,9 +2,10 @@
 using Broker.Application.Core;
 using Broker.Application.Models;
 using Broker.Common;
+using Broker.Domain;
 using Broker.Infrastructure;
 using Broker.Infrastructure.Integration.Services.Abstractions.ERA;
-using Microsoft.EntityFrameworkCore;
+using Broker.Infrastructure.Integration.Services.Models.ERA;
 
 namespace Broker.Application.Services;
 
@@ -24,137 +25,212 @@ public class RateService : ServiceBase, IRateService
 
     #endregion
 
-    public async Task<ICollection<RateModel>> FindAll()
+    #region Private Member(s)
+
+    private static CurrencyCodeType DefaultBaseCurrencyCodeType => CurrencyCodeType.USD;
+
+    private static IEnumerable<CurrencyCodeType> DefaultOutputCurrencyCodeTypes => new List<CurrencyCodeType>
     {
-        return new List<RateModel>();
-    }
+        CurrencyCodeType.RUB,
+        CurrencyCodeType.EUR,
+        CurrencyCodeType.GBP,
+        CurrencyCodeType.JPY
+    };
 
-    public async Task<BestRevenueModel> FindBestRevenue(DateTime startDate, DateTime endDate, decimal moneyUsd)
+    #endregion
+
+    public async Task<BestRevenueModel> FindBestRevenue(
+        DateTime startDate,
+        DateTime endDate,
+        decimal moneyUsd)
     {
-        var outputCurrencyCodeTypes = new List<CurrencyCodeType>
-        {
-            CurrencyCodeType.RUB,
-            CurrencyCodeType.EUR,
-            CurrencyCodeType.GBP,
-            CurrencyCodeType.JPY
-        };
+        var rateEntities = await GetRatesByDateRange(startDate, endDate);
 
-        // TODO: Get rates from db
-        var dbEntities = await Context.Rates.ToListAsync();
-
-        // Get rates from Api
-        var apiTimeSeries = await _timeSeriesApiService.Get(
-            startDate,
-            endDate,
-            CurrencyCodeType.USD,
-            outputCurrencyCodeTypes);
-
-        // TODO: Save rates to db
-
-        // TODO: Consolidate db and api data
-
-        var rates = dbEntities
-            .Select(e => new RateModel())
-            .ToList();
-
-        rates = rates.OrderBy(e => e.Date).ToList();
-
-        // Calculate best revenue
         var result = new BestRevenueModel
         {
-            Rates = rates
+            Rates = MapToRateModels(rateEntities).ToList()
         };
 
-        if (!rates.Any())
+        if (rateEntities.Count <= 1)
             return result;
 
-        var buyRubValue = rates[0].Rub;
-        var buyEurValue = rates[0].Eur;
-        var buyGbpValue = rates[0].Gbp;
-        var buyJpyValue = rates[0].Jpy;
+        var buyDates = new Dictionary<CurrencyCodeType, DateTime>();
+        var buyValues = new Dictionary<CurrencyCodeType, decimal>();
 
-        result.BuyDate = rates[0].Date;
-        result.SellDate = rates[0].Date;
+        var firstRate = rateEntities[0];
 
-        decimal maxRevenue = 0;
-
-        for (var i = 1; i < rates.Count; i++)
+        foreach (var rateValue in firstRate.Values)
         {
-            // RUB
-            var revenue = Math.Round(buyRubValue / rates[i].Rub, 2);
+            buyDates[rateValue.TargetCurrencyCodeType] = firstRate.Date;
+            buyValues[rateValue.TargetCurrencyCodeType] = rateValue.Value;
+        }
 
-            if (rates[i].Rub > buyRubValue)
+        decimal maxRevenueAmount = 0;
+
+        // Calculate best revenue
+        for (var i = 1; i < rateEntities.Count; i++)
+        {
+            var rate = rateEntities[i];
+
+            // Loop over each rate pair (RUB/USD, EUR/USD, etc) 
+            foreach (var targetCurrencyCode in DefaultOutputCurrencyCodeTypes)
             {
-                result.BuyDate = rates[i].Date;
-                result.Tool = "RUB";
+                var rateValue = rate.Values
+                    .Single(e => e.SourceCurrencyCodeType == DefaultBaseCurrencyCodeType
+                                 && e.TargetCurrencyCodeType == targetCurrencyCode);
 
-                buyRubValue = rates[i].Rub;
-            }
-            else if (revenue > maxRevenue)
-            {
-                result.SellDate = rates[i].Date;
-                result.Tool = "RUB";
+                var revenuePercent = buyValues[rateValue.TargetCurrencyCodeType] / rateValue.Value;
+                var fee = (int)Math.Ceiling(rate.Date.Subtract(buyDates[rateValue.TargetCurrencyCodeType]).TotalDays);
+                var revenueAmount = moneyUsd * (revenuePercent - 1) - fee;
 
-                maxRevenue = revenue;
-            }
+                if (rateValue.Value > buyValues[rateValue.TargetCurrencyCodeType])
+                {
+                    // If the current Rate Value is greater than the previous Buy Value,
+                    // then it means it's a better value to buy
+                    buyDates[rateValue.TargetCurrencyCodeType] = rate.Date;
+                    buyValues[rateValue.TargetCurrencyCodeType] = rateValue.Value;
+                }
+                else if (revenueAmount > maxRevenueAmount)
+                {
+                    // If the revenue amount is greater than the previous max revenue,
+                    // then keep the data associated to the current rate
+                    maxRevenueAmount = revenueAmount;
 
-            // EUR
-            revenue = Math.Round(buyEurValue / rates[i].Eur, 2);
-
-            if (rates[i].Eur > buyEurValue)
-            {
-                result.BuyDate = rates[i].Date;
-                result.Tool = "EUR";
-
-                buyEurValue = rates[i].Eur;
-            }
-            else if (revenue > maxRevenue)
-            {
-                result.SellDate = rates[i].Date;
-                result.Tool = "EUR";
-
-                maxRevenue = revenue;
-            }
-
-            // GBP
-            revenue = Math.Round(buyGbpValue / rates[i].Gbp, 2);
-
-            if (rates[i].Gbp > buyGbpValue)
-            {
-                result.BuyDate = rates[i].Date;
-                result.Tool = "GBP";
-
-                buyGbpValue = rates[i].Gbp;
-            }
-            else if (revenue > maxRevenue)
-            {
-                result.SellDate = rates[i].Date;
-                result.Tool = "GBP";
-
-                maxRevenue = revenue;
-            }
-
-            // JPY
-            revenue = Math.Round(buyJpyValue / rates[i].Jpy, 2);
-
-            if (rates[i].Jpy > buyJpyValue)
-            {
-                result.BuyDate = rates[i].Date;
-                result.Tool = "JPY";
-
-                buyJpyValue = rates[i].Jpy;
-            }
-            else if (revenue > maxRevenue)
-            {
-                result.SellDate = rates[i].Date;
-                result.Tool = "JPY";
-
-                maxRevenue = revenue;
+                    result.BuyDate = buyDates[rateValue.TargetCurrencyCodeType];
+                    result.SellDate = rate.Date;
+                    result.Tool = rateValue.TargetCurrencyCodeType;
+                }
             }
         }
 
-        result.Revenue = moneyUsd * (maxRevenue - 1);
+        result.Revenue = maxRevenueAmount;
 
         return result;
     }
+
+    #region Private Method(s)
+
+    private async Task<IList<Rate>> GetRatesByDateRange(
+        DateTime startDate,
+        DateTime endDate,
+        bool cacheNewData = true)
+    {
+        var needReordering = false;
+
+        // Get rates data from db
+        var ratesEntities = Context.Rates
+            .Where(e => e.Date >= startDate
+                        && e.Date <= endDate)
+            .OrderBy(e => e.Date)
+            .ToList();
+
+        if (ratesEntities.Any())
+        {
+            // Check rates data retrieved from db and get missing dates from API if needed
+            var firstRate = ratesEntities.FirstOrDefault();
+            var lastRate = ratesEntities.LastOrDefault();
+
+            if (firstRate?.Date > startDate)
+            {
+                // Get date interval [startDate; firstRate.Date - 1 day] from API
+                var newRates = (await GetRatesFromExternalDataSource(
+                    startDate,
+                    firstRate.Date.AddDays(-1)))
+                    .ToList();
+
+                ratesEntities.AddRange(newRates);
+                needReordering = true;
+
+                // Cache data into db
+                if (cacheNewData)
+                    await SaveRates(newRates);
+            }
+
+            if (lastRate?.Date < endDate)
+            {
+                // Get date interval [lastRate.Date + 1 day; endDate] from API
+                var newRates = (await GetRatesFromExternalDataSource(
+                    lastRate.Date.AddDays(1),
+                    endDate))
+                    .ToList();
+
+                ratesEntities.AddRange(newRates);
+                needReordering = true;
+
+                // Cache data into db
+                if (cacheNewData)
+                    await SaveRates(newRates);
+            }
+        }
+        else
+        {
+            // Get all rates data from API
+            var newRates = (await GetRatesFromExternalDataSource(
+                startDate,
+                endDate))
+                .ToList();
+
+            ratesEntities.AddRange(newRates);
+
+            // Cache data into db
+            if (cacheNewData)
+                await SaveRates(newRates);
+        }
+
+        return needReordering
+            ? ratesEntities
+                .OrderBy(e => e.Date)
+                .ToList()
+            : ratesEntities;
+    }
+
+    private async Task<IEnumerable<Rate>> GetRatesFromExternalDataSource(
+        DateTime startDate,
+        DateTime endDate)
+    {
+        var apiTimeSeries = await _timeSeriesApiService.Get(
+            startDate,
+            endDate,
+            DefaultBaseCurrencyCodeType,
+            DefaultOutputCurrencyCodeTypes);
+
+        return MapToRateEntities(apiTimeSeries);
+    }
+
+    private static IEnumerable<Rate> MapToRateEntities(TimeSeriesApiResponseModel timeSeries)
+    {
+        // TODO: improve this by using a mapper lib like AutoMapper
+        return timeSeries.Rates
+            .Select(e => new Rate
+            {
+                Date = e.Key,
+                Values = e.Value.Select(v => new RateValue
+                {
+                    SourceCurrencyCodeType = timeSeries.Base,
+                    TargetCurrencyCodeType = v.Key,
+                    Value = v.Value
+                }).ToList()
+            });
+    }
+
+    private async Task SaveRates(IEnumerable<Rate> rates)
+    {
+        await Context.Rates.AddRangeAsync(rates);
+        await Context.SaveChangesAsync();
+    }
+
+    private static IEnumerable<RateModel> MapToRateModels(IEnumerable<Rate> rates)
+    {
+        // TODO: improve this by using a mapper lib like AutoMapper
+        return rates.Select(e => new RateModel
+        {
+            Date = e.Date,
+            Rub = e.Values.Single(v => v.TargetCurrencyCodeType == CurrencyCodeType.RUB).Value,
+            Eur = e.Values.Single(v => v.TargetCurrencyCodeType == CurrencyCodeType.EUR).Value,
+            Gbp = e.Values.Single(v => v.TargetCurrencyCodeType == CurrencyCodeType.GBP).Value,
+            Jpy = e.Values.Single(v => v.TargetCurrencyCodeType == CurrencyCodeType.JPY).Value
+        });
+    }
+
+    #endregion
 }

@@ -26,7 +26,9 @@ builder.Services.AddControllers();
 
 // Add database
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString(nameof(AppDbContext))));
+    options
+        .UseLazyLoadingProxies()
+        .UseSqlServer(builder.Configuration.GetConnectionString(nameof(AppDbContext))));
 
 // Add Cors
 builder.Services.AddCors(options =>

@@ -18,7 +18,7 @@ public class TimeSeriesApiService : ExchangeRatesApiServiceBase, ITimeSeriesApiS
         DateTime startDate,
         DateTime endDate,
         CurrencyCodeType? baseCurrencyCodeType = null,
-        ICollection<CurrencyCodeType>? outputCurrencyCodeTypes = null)
+        IEnumerable<CurrencyCodeType>? outputCurrencyCodeTypes = null)
     {
         var startDateParamValue = startDate.ToString("yyyy-MM-dd");
         var endDateParamValue = endDate.ToString("yyyy-MM-dd");

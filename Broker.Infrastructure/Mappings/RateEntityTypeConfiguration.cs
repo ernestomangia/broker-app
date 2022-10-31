@@ -14,17 +14,14 @@ public class RateEntityTypeConfiguration : EntityTypeConfigurationBase<Rate>
         builder.Property(x => x.Date)
             .IsRequired();
 
-        builder.Property(x => x.Rub)
-            .IsRequired();
+        // IX
+        builder.HasIndex(e => e.Date)
+            .IsUnique();
 
-        builder.Property(x => x.Eur)
-            .IsRequired();
-
-        builder.Property(x => x.Gbp)
-            .IsRequired();
-
-        builder.Property(x => x.Jpy)
-            .IsRequired();
+        // Relationships
+        builder.HasMany(e => e.Values)
+            .WithOne(e => e.Rate)
+            .HasForeignKey(e => e.RateId);
 
         builder.ToTable(nameof(Rate));
     }

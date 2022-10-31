@@ -9,5 +9,5 @@ public interface ITimeSeriesApiService
         DateTime startDate,
         DateTime endDate,
         CurrencyCodeType? baseCurrencyCodeType = null,
-        ICollection<CurrencyCodeType>? outputCurrencyCodeTypes = null);
+        IEnumerable<CurrencyCodeType>? outputCurrencyCodeTypes = null);
 }
