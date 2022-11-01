@@ -1,0 +1,156 @@
+<!-- Form -->
+<div class="container">
+    <mat-card class="mat-elevation-z3">
+        <mat-card-content>
+            <h2>
+                GET rates/best
+            </h2>
+            <form novalidate [formGroup]="formGroup" autocomplete="off">
+                <div class="row">
+                    <div class="col-12 col-md-6">
+                        <mat-form-field class="w-100">
+                            <mat-label>Enter a Date Range</mat-label>
+                            <mat-date-range-input [rangePicker]="picker" [min]="minDate" [max]="maxDate">
+                                <input matStartDate formControlName="startDate" placeholder="Start date">
+                                <input matEndDate formControlName="endDate" placeholder="End date">
+                            </mat-date-range-input>
+                            <mat-hint>MM/DD/YYYY</mat-hint>
+                            <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                            <mat-date-range-picker #picker></mat-date-range-picker>
+                            <mat-error>
+                                <div *ngIf="formGroup.controls['startDate'].hasError('required')">
+                                    Start Date is required
+                                </div>
+                                <div *ngIf="formGroup.controls['startDate'].hasError('matStartDateInvalid')">
+                                    Start Date is invalid
+                                </div>
+                                <div *ngIf="formGroup.controls['endDate'].hasError('required')">
+                                    End Date is required
+                                </div>
+                                <div *ngIf="formGroup.controls['endDate'].hasError('matEndDateInvalid')">
+                                    End Date is invalid
+                                </div>
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <mat-form-field class="w-100">
+                            <input matInput type="number" formControlName="moneyUsd" placeholder="Money USD" required>
+                            <mat-error>
+                                <div *ngIf="formGroup.controls['moneyUsd'].hasError('required')">
+                                    Money USD is required
+                                </div>
+                                <div *ngIf="formGroup.controls['moneyUsd'].hasError('min')">
+                                    Money USD must be >= 0
+                                </div>
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                </div>
+            </form>
+        </mat-card-content>
+        <mat-card-actions>
+            <div class="text-end">
+                <button mat-raised-button type="button" (click)="onGetBestRevenue()" [disabled]="!formGroup.valid"
+                    class="button" color="primary">
+                    GET
+                </button>
+            </div>
+        </mat-card-actions>
+    </mat-card>
+</div>
+
+<!-- Result data -->
+<div class="container mt-5">
+    <h2>
+        Best Revenue
+    </h2>
+    <hr>
+    <div class="row mb-4">
+        <div class="col-12 col-md-3">
+            <b>Buy Date:</b> {{ entity?.buyDate | date: 'yyyy-MM-dd' }}
+        </div>
+        <div class="col-12 col-md-3">
+            <b>Sell Date:</b> {{ entity?.sellDate | date: 'yyyy-MM-dd' }}
+        </div>
+        <div class="col-12 col-md-3">
+            <b>Tool:</b> {{ entity?.tool }}
+        </div>
+        <div class="col-12 col-md-3">
+            <b>Revenue:</b> {{ entity?.revenue | number: '1.0-6' }}
+        </div>
+    </div>
+    <table mat-table [dataSource]="dataSource" class="mat-elevation-z3">
+        <!-- Date -->
+        <ng-container matColumnDef="date">
+            <th mat-header-cell *matHeaderCellDef> Date </th>
+            <td mat-cell *matCellDef="let item"> {{ item.date | date: 'yyyy-MM-dd' }} </td>
+        </ng-container>
+
+        <!-- RUB/USD -->
+        <ng-container matColumnDef="rub-usd">
+            <th mat-header-cell *matHeaderCellDef> RUB/USD </th>
+            <td mat-cell *matCellDef="let item" 
+                [ngClass]="entity?.tool == CurrencyCodeType.RUB 
+                    ? item.isBuyRate 
+                        ? 'bg-light-green' 
+                        : item.isSellRate
+                            ? 'bg-light-red'
+                            : ''
+                    : ''
+                "> 
+                {{ item.rub | number: '1.6-6' }} 
+            </td>
+        </ng-container>
+
+        <!-- EUR/USD -->
+        <ng-container matColumnDef="eur-usd">
+            <th mat-header-cell *matHeaderCellDef> EUR/USD </th>
+            <td mat-cell *matCellDef="let item"
+                [ngClass]=" entity?.tool == CurrencyCodeType.EUR 
+                    ? item.isBuyRate 
+                        ? 'bg-light-green' 
+                        : item.isSellRate
+                            ? 'bg-light-red'
+                            : ''
+                    : ''
+                ">
+                {{ item.eur | number: '1.6-6' }} 
+            </td>
+        </ng-container>
+
+        <!-- GBP/USD -->
+        <ng-container matColumnDef="gbp-usd">
+            <th mat-header-cell *matHeaderCellDef> GBP/USD </th>
+            <td mat-cell *matCellDef="let item"
+                [ngClass]=" entity?.tool == CurrencyCodeType.GBP
+                    ? item.isBuyRate 
+                        ? 'bg-light-green' 
+                        : item.isSellRate
+                            ? 'bg-light-red'
+                            : ''
+                    : ''
+                ">
+                {{ item.gbp | number: '1.6-6' }} </td>
+        </ng-container>
+
+        <!-- JPY/USD -->
+        <ng-container matColumnDef="jpy-usd">
+            <th mat-header-cell *matHeaderCellDef> JPY/USD </th>
+            <td mat-cell *matCellDef="let item"
+                [ngClass]=" entity?.tool == CurrencyCodeType.JPY
+                    ? item.isBuyRate 
+                        ? 'bg-light-green' 
+                        : item.isSellRate
+                            ? 'bg-light-red'
+                            : ''
+                    : ''
+                "> 
+                {{ item.jpy | number: '1.6-6' }} 
+            </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>
+</div>

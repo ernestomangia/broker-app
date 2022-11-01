@@ -4,8 +4,5 @@ namespace Broker.Application.Abstractions;
 
 public interface IRateService
 {
-    Task<BestRevenueModel> FindBestRevenue(
-        DateTime startDate, 
-        DateTime endDate, 
-        decimal moneyUsd);
+    Task<BestRevenueModel> FindBestRevenue(BestRevenueRequestModel model);
 }

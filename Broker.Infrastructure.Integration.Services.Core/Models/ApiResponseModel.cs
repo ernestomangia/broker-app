@@ -2,5 +2,5 @@
 
 public class ApiResponseModel<TEntity> : ApiResponseModelBase
 {
-    public TEntity? Result { get; set; }
+    public TEntity Result { get; set; }
 }

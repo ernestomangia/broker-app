@@ -1,5 +1,4 @@
 ﻿using Broker.Common;
-using Broker.Common.Core.Extensions;
 using Broker.Infrastructure.Integration.Services.Abstractions.ERA;
 using Broker.Infrastructure.Integration.Services.Models.ERA;
 
@@ -39,8 +38,6 @@ public class TimeSeriesApiService : ExchangeRatesApiServiceBase, ITimeSeriesApiS
         }
 
         var entity = await Get<TimeSeriesApiResponseModel>(url);
-
-        entity.ThrowIfNull();
 
         return entity.Result;
     }

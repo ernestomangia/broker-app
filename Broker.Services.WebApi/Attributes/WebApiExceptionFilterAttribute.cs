@@ -20,10 +20,12 @@ public class WebApiExceptionFilterAttribute : ExceptionFilterAttribute
         if (context.Exception is DataValidationException
             || context.Exception is ApiServiceException)
         {
+            context.HttpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
             result.StatusCode = HttpStatusCode.BadRequest;
         }
         else
         {
+            context.HttpContext.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
             result.StatusCode = HttpStatusCode.InternalServerError;
         }
 

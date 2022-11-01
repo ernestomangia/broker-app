@@ -40,18 +40,15 @@ public class RateService : ServiceBase, IRateService
 
     #endregion
 
-    public async Task<BestRevenueModel> FindBestRevenue(
-        DateTime startDate,
-        DateTime endDate,
-        decimal moneyUsd)
+    public async Task<BestRevenueModel> FindBestRevenue(BestRevenueRequestModel model)
     {
-        if (endDate <= startDate)
+        if (model.EndDate <= model.StartDate)
             throw new DataValidationException("'endDate' must be greater than 'startDate'");
 
-        if (moneyUsd < 0)
+        if (model.MoneyUsd < 0)
             throw new DataValidationException("'moneyUsd' must be greater than or equal to 0");
 
-        var rateEntities = await GetRatesByDateRange(startDate, endDate);
+        var rateEntities = await GetRatesByDateRange(model.StartDate, model.EndDate);
 
         var result = new BestRevenueModel
         {
@@ -86,7 +83,7 @@ public class RateService : ServiceBase, IRateService
 
                 var revenuePercent = buyValues[rateValue.TargetCurrencyCodeType] / rateValue.Value;
                 var fee = (int)Math.Ceiling(rate.Date.Subtract(buyDates[rateValue.TargetCurrencyCodeType]).TotalDays);
-                var revenueAmount = moneyUsd * (revenuePercent - 1) - fee;
+                var revenueAmount = model.MoneyUsd * (revenuePercent - 1) - fee;
 
                 if (rateValue.Value > buyValues[rateValue.TargetCurrencyCodeType])
                 {

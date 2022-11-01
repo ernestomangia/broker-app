@@ -1,0 +1,13 @@
+<header>
+    <mat-toolbar color="primary">
+        <div class="app-name">
+            <span>Broker App</span>
+        </div>
+        <button mat-button [routerLink]="['/dashboard']">
+            Dashboard
+        </button>
+    </mat-toolbar>
+</header>
+<div class="mt-5 pb-5">
+    <router-outlet></router-outlet>
+</div>

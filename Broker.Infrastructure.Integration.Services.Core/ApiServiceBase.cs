@@ -16,7 +16,8 @@ public abstract class ApiServiceBase : IApiServiceBase
 
     protected abstract string ServiceName { get; }
 
-    public async Task<ApiResponseModel<TEntity>?> Get<TEntity>(string resourceUrl)
+    public async Task<ApiResponseModel<TEntity>> Get<TEntity>(string resourceUrl)
+        where TEntity : new()
     {
         var client = _httpClientFactory.CreateClient(ServiceName);
 
@@ -32,7 +33,7 @@ public abstract class ApiServiceBase : IApiServiceBase
 
             return new ApiResponseModel<TEntity>
             {
-                Result = data,
+                Result = data ?? new TEntity(),
                 Response = response
             };
         }
