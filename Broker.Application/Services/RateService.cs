@@ -1,5 +1,6 @@
 ﻿using Broker.Application.Abstractions;
 using Broker.Application.Core;
+using Broker.Application.Core.Exceptions;
 using Broker.Application.Models;
 using Broker.Common;
 using Broker.Domain;
@@ -44,15 +45,19 @@ public class RateService : ServiceBase, IRateService
         DateTime endDate,
         decimal moneyUsd)
     {
+        if (endDate <= startDate)
+            throw new DataValidationException("'endDate' must be greater than 'startDate'");
+
+        if (moneyUsd < 0)
+            throw new DataValidationException("'moneyUsd' must be greater than or equal to 0");
+
         var rateEntities = await GetRatesByDateRange(startDate, endDate);
 
         var result = new BestRevenueModel
         {
-            Rates = MapToRateModels(rateEntities).ToList()
+            Rates = MapToRateModels(rateEntities)
+                .ToList()
         };
-
-        if (rateEntities.Count <= 1)
-            return result;
 
         var buyDates = new Dictionary<CurrencyCodeType, DateTime>();
         var buyValues = new Dictionary<CurrencyCodeType, decimal>();

@@ -2,10 +2,8 @@
 
 public class ApiServiceException : ApplicationException
 {
-    public ApiServiceException() { }
-
-    public ApiServiceException(string message) 
-        : base(message)
+    public ApiServiceException(string message)
+        : base($"Api Service Error: {message}")
     {
     }
 }

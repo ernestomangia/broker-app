@@ -1,6 +1,7 @@
 using System.Net.Http.Headers;
 using Broker.Infrastructure;
 using Broker.Infrastructure.Integration.Services.Services.ERA;
+using Broker.Services.WebApi.Attributes;
 using Broker.Services.WebApi.Extensions;
 using Microsoft.EntityFrameworkCore;
 
@@ -22,7 +23,10 @@ builder.Services.AddHttpClient(nameof(ExchangeRatesApiServiceBase), httpClient =
 });
 
 // Add controllers
-builder.Services.AddControllers();
+builder.Services.AddControllers(config =>
+{
+    config.Filters.Add(new WebApiExceptionFilterAttribute());
+});
 
 // Add database
 builder.Services.AddDbContext<AppDbContext>(options =>
