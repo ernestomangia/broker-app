@@ -29,10 +29,10 @@ export class DashboardComponent implements OnInit {
         this._maxDate = new Date();
 
         this._formGroup = new FormGroup({
-            startDate: new FormControl<Date | null>(new Date(2022, 2, 1), {
+            startDate: new FormControl<Date | null>(null, {
                 validators: [Validators.required]
             }),
-            endDate: new FormControl<Date | null>(new Date(2022, 2, 10), {
+            endDate: new FormControl<Date | null>(null, {
                 validators: [Validators.required]
             }),
             moneyUsd: new FormControl(null, {
