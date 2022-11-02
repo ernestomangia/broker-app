@@ -7,6 +7,7 @@ Broker App gets rates data from an external service API and determines what woul
 Project is created with:
 
 - Visual Studio 2022
+- Visual Studio Code 
 - .NET 6.0 / C#
 - ASP.NET Core Web API
 - Swagger
@@ -14,6 +15,11 @@ Project is created with:
 - SQL Server
 - Xunit / Moq
 - Exchange Rates API service
+- Angular
+- Angular Material
+- Bootstrap
+- Toastr
+- Reactive Forms
 
 ### Installation
 
@@ -32,12 +38,19 @@ Project is created with:
 		}
 	  }
 	```
+8. Open folder Broker.UI\broker-app using Visual Studio Code
+9. Run `npm install`
 
-All done!
+All done. Both frontend and backend should be ready to be run!
 
-### Run
-1. Set `Broker.Services.WebApi` as Startup Project 
-2. Press F5 to run the Web API
+### Run backend (Web API)
+1. Open `Broker.sln` solution using Visual Studio
+2. Set `Broker.Services.WebApi` as Startup Project 
+3. Press F5 to run the Web API
+
+### Run frontend (Angular app)
+1. Open folder Broker.UI\broker-app using Visual Studio Code
+2. Run `ng serve` and navigate to `http://localhost:4200/`
 
 ## License
 [MIT](https://choosealicense.com/licenses/mit/)
